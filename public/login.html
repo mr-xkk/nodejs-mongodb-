@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>我是登录页</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="http://static.runoob.com/assets/jquery-validation-1.14.0/dist/jquery.validate.min.js"></script>
+    <script src="http://static.runoob.com/assets/jquery-validation-1.14.0/dist/localization/messages_zh.js"></script>
+</head>
+<body>
+  <form class="form-horizontal" id="loginForm">
+    <div class="form-group">
+      <label for="loginusername" class="col-sm-2 control-label">账号</label>
+      <div class="col-sm-8">
+        <input type="text" class="form-control" id="loginusername" placeholder="账号">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="loginpassword" class="col-sm-2 control-label">密码</label>
+      <div class="col-sm-8">
+        <input type="password" class="form-control" id="loginpassword" placeholder="密码">
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <div class="check">
+          <label>
+            <input type="checkbox" id="mycheck"> 记住账户
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <button type="button" class="btn btn-default" id="info_submit">登录</button>
+      </div>
+    </div>
+  </form>
+</body>
+</html>
+<script>
+  $(document).ready(function(){
+    //设置cookie
+      function setCookie(name,psw,idate){
+        var oDate = new Date();
+        oDate.setDate(oDate.getDate()+idate)
+        document.cookie = name+'='+psw+';expires'+idate;
+      }
+      //读取cookie
+      function getCookie(key){
+        var arr = document.cookie.split(';')
+        for(var i=0;i<arr.length;i++){
+          var arr2 = arr[i].split('=');
+          if(arr2[0]==key){
+            return arr2[1];
+          }
+        }
+        return '';
+      }
+    //如果有存入的cookie,取出账户名显示在input框;
+     $('#loginusername').val(getCookie('username'));
+    //查询数据库确认账户密码是否正确
+     $("#info_submit").click(function(){
+        var username=$('#loginusername').val();
+        var password=$('#loginpassword').val();
+        //这里实现对 username和password格式的判断
+        //........
+        //发送ajax请求 使用post方式发送json字符串给后台login
+        $.ajax({
+            type: "post",
+            url: "http://localhost:1993/login",
+            dataType: "json",
+            data:{ username: username, password: password },
+            success: function(data){
+            //接受返回的数据，前端判断采取的动作
+              console.log(data);
+              if(data){
+                  if(data.message=="false"){
+                    window.location.href="#";
+                    alert('账号密码错误')
+                  }else{
+                    alert('登陆成功');
+                    //登录成功将用户名存入cookie;
+                    if($('#mycheck').prop('checked')==true){
+                      setCookie('username',username,7);
+                    }
+                    window.location.href="http://localhost:1993";
+                  }
+              }
+            }
+        });
+    });
+  })
+</script>
