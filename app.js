@@ -15,14 +15,17 @@ app.use(bodyParser.urlencoded({extended:true}))
 app.get('/',function(req,res){
     res.render('index',__dirname+"public/index.html")
 })
-/*插入数据库函数*/
-function insert(name,psw){
-    var user=new userSchema({
-        username : name,
-        userpsw : psw,
-        logindate : new Date()
-    });
 
+
+/*插入数据库函数*/
+function insert(name,psw,nick){
+      //数据格式
+    var user =  new userSchema({
+                username : name,
+                userpsw : psw,
+                nickname : nick,
+                logindate : new Date()
+            });
     user.save(function(err,res){
         if(err){
             console.log(err)
@@ -37,11 +40,21 @@ function insert(name,psw){
 app.post('/register', function (req, res) {
   //先查询有没有这个user
   console.log("req.body"+req.body);
+  //处理跨域的问题
+  res.setHeader('Content-type','application/json;charset=utf-8')
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");
+  res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
+  res.header("X-Powered-By",' 3.2.1')
   var UserName = req.body.username;
   var UserPsw = req.body.password;
+  var Nickname = req.body.nickname;
   //通过账号验证
   var updatestr = {username: UserName};
-   res.setHeader('Content-type','application/json;charset=utf-8')
+    if(UserName == ''){
+       res.send({status:'success',message:false}) ;
+    }
+    res.setHeader('Content-type','application/json;charset=utf-8')
     console.log(updatestr);
     userSchema.find(updatestr, function(err, obj){
         if (err) {
@@ -50,11 +63,13 @@ app.post('/register', function (req, res) {
         else {
             if(obj.length == 0){
                 //如果查出无数据,就将账户密码插入数据库
-                insert(UserName,UserPsw); 
+                insert(UserName,UserPsw,Nickname); 
                 //返回数据到前端
-                res.send({status:'success',message:'true'}) 
+                res.send({status:'success',message:true}) 
+            }else if(obj.length !=0){
+                res.send({status:'success',message:false}) 
             }else{
-                res.send({status:'success',message:'false'}) 
+                res.send({status:'success',message:false}) 
             }
         }
     })  
@@ -68,7 +83,13 @@ app.post('/login', function (req, res, next) {
   var UserPsw = req.body.password;
   //通过账号密码搜索验证
   var updatestr = {username: UserName,userpsw:UserPsw};
+  //处理跨域的问题
     res.setHeader('Content-type','application/json;charset=utf-8')
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");
+    res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
+    res.header("X-Powered-By",' 3.2.1')
+    
     console.log(updatestr);
     userSchema.find(updatestr, function(err, obj){
         console.log(obj);
@@ -77,15 +98,35 @@ app.post('/login', function (req, res, next) {
         }
         else {
             if(obj.length == 1){
-                console.log('登录成功')
-                res.send({status:'success',message:'true'}) 
+                console.log('登录成功');
+                res.send({status:'success',message:true}); 
             }else{
                 console.log('请注册账号'); 
-                res.send({status:'success',message:'false'}) 
+                res.send({status:'success',message:false}); 
             }
         }
     })
 });
+
+//处理昵称和头像的上传
+app.post('/uploadImg',function(req,res,next){
+    res.setHeader('Content-type','application/json;charset=utf-8')
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");
+    res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
+    res.header("X-Powered-By",' 3.2.1')
+    //id
+    var getName = req.body.sendName;
+    //昵称
+    var myName = req.body.myName;
+
+    var checkName = {username: getName};
+    //修改默认的昵称
+    userSchema.update(checkName,{nickname:myName},function(err, nick){
+        res.send({status:'success',message:true}); 
+    })
+})
+
 
 var server = app.listen(1993,function(){
     console.log('server connect');

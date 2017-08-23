@@ -4,7 +4,8 @@ var mongoose = require('./db'),
 var UserSchema = new Schema({
     username : String,
     userpsw : String,
-    logindate : Date
+    logindate : Date,
+    nickname : String
 })
 
 module.exports = mongoose.model('User',UserSchema);
