@@ -76,7 +76,7 @@
             data:{ username: username, password: password },
             success: function(data){
             //接受返回的数据，前端判断采取的动作
-              console.log(data);
+              console.log(data.data);
               if(data){
                   if(data.message=="false"){
                     window.location.href="#";
@@ -87,7 +87,7 @@
                     if($('#mycheck').prop('checked')==true){
                       setCookie('username',username,7);
                     }
-                    window.location.href="http://localhost:1993";
+                    //window.location.href="http://localhost:1993";
                   }
               }
             }

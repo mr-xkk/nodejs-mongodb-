@@ -3,6 +3,8 @@ var app = express();
 var userSchema = require('./user');
 var bodyParser = require('body-parser')
 var mongoose = require('mongoose');
+//加密模块
+var crypto = require("crypto");
 
 //链接本地数据库
 var DB_URL = 'mongodb://localhost:27017/mongoose'
@@ -28,7 +30,7 @@ function insert(name,psw,nick){
             });
     user.save(function(err,res){
         if(err){
-            console.log(err)
+            console.log(err);
         }
         else{
             console.log(res);
@@ -38,24 +40,25 @@ function insert(name,psw,nick){
 
 /*注册页面数据接收*/
 app.post('/register', function (req, res) {
-  //先查询有没有这个user
-  console.log("req.body"+req.body);
   //处理跨域的问题
   res.setHeader('Content-type','application/json;charset=utf-8')
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");
   res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
   res.header("X-Powered-By",' 3.2.1')
+   //先查询有没有这个user
   var UserName = req.body.username;
   var UserPsw = req.body.password;
   var Nickname = req.body.nickname;
+  //密码加密
+  var md5 = crypto.createHash("md5");
+  var newPas = md5.update(UserPsw).digest("hex");
   //通过账号验证
   var updatestr = {username: UserName};
     if(UserName == ''){
        res.send({status:'success',message:false}) ;
     }
     res.setHeader('Content-type','application/json;charset=utf-8')
-    console.log(updatestr);
     userSchema.find(updatestr, function(err, obj){
         if (err) {
             console.log("Error:" + err);
@@ -63,7 +66,7 @@ app.post('/register', function (req, res) {
         else {
             if(obj.length == 0){
                 //如果查出无数据,就将账户密码插入数据库
-                insert(UserName,UserPsw,Nickname); 
+                insert(UserName,newPas,Nickname); 
                 //返回数据到前端
                 res.send({status:'success',message:true}) 
             }else if(obj.length !=0){
@@ -81,8 +84,11 @@ app.post('/login', function (req, res, next) {
   console.log("req.body"+req.body);
   var UserName = req.body.username;
   var UserPsw = req.body.password;
+  //密码加密  
+  var md5 = crypto.createHash("md5");
+  var newPas = md5.update(UserPsw).digest("hex");
   //通过账号密码搜索验证
-  var updatestr = {username: UserName,userpsw:UserPsw};
+  var updatestr = {username: UserName,userpsw:newPas};
   //处理跨域的问题
     res.setHeader('Content-type','application/json;charset=utf-8')
     res.header("Access-Control-Allow-Origin", "*");
@@ -90,16 +96,14 @@ app.post('/login', function (req, res, next) {
     res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
     res.header("X-Powered-By",' 3.2.1')
     
-    console.log(updatestr);
     userSchema.find(updatestr, function(err, obj){
-        console.log(obj);
         if (err) {
             console.log("Error:" + err);
         }
         else {
             if(obj.length == 1){
                 console.log('登录成功');
-                res.send({status:'success',message:true}); 
+                res.send({status:'success',message:true,data:obj}); 
             }else{
                 console.log('请注册账号'); 
                 res.send({status:'success',message:false}); 
@@ -123,7 +127,8 @@ app.post('/uploadImg',function(req,res,next){
     var checkName = {username: getName};
     //修改默认的昵称
     userSchema.update(checkName,{nickname:myName},function(err, nick){
-        res.send({status:'success',message:true}); 
+        console.log('我是昵称'+nick);
+        res.send({status:'success',message:true,data:nick}); 
     })
 })
 
