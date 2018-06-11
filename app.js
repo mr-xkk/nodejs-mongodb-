@@ -17,7 +17,7 @@ app.use(bodyParser.urlencoded({extended:true}))
 app.get('/',function(req,res){
     res.render('index',__dirname+"public/index.html")
 })
-//git测试
+//git测试123
 
 
 /*插入数据库函数*/
